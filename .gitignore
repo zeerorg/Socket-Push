@@ -3,3 +3,4 @@ node_modules
 typeSrc/secrets.ts
 secrets.js
 yarn.lock
+build
