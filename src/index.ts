@@ -5,30 +5,44 @@ import { Server, createServer } from "http";
 import { MongoClient, Db } from "mongodb";
 
 import { secret } from "./secrets";
-import { MongoUser } from "./backend/users";
+import { MongoUser, UserNamespace } from "./backend/users";
 
 const app: express.Application = express();
 const server: Server = createServer(app);
 const io: SocketIO.Server = socket(server);
 const mongoURL: string = `mongodb://${secret.mongoUser}:${secret.mongoPassword}@${secret.mongoURL}:${secret.mongoPort}/notif`;
 
-const nameSpace: {[key: string]: SocketIO.Namespace} = {};
-let tokens: string[] = [];
+let namespace: UserNamespace;
+let db: Db;
+let userFunc: MongoUser;
+let tokens: string[];
 
+/**
+ * initializes the server
+ */
 const main = async (): Promise<void> => {
-    const db: Db = await MongoClient.connect(mongoURL);
-    const userFunc: MongoUser = await MongoUser.initialize(db);
-    console.log(await userFunc.getAllTokens());
+    db = await MongoClient.connect(mongoURL);
+    userFunc = await MongoUser.initialize(db);
+    tokens = await userFunc.getAllTokens();
+    namespace = new UserNamespace(io, tokens);
+}
 
-    db.close();
+/**
+ * cleans the server after it is closed
+ */
+const cleanup = async (): Promise<void> => {
+    io.close();
+    await db.close();
 }
 
 app.get("/", (req, res) => {
     res.send("Hello World");
 });
 
-server.listen(3000, () => {
+server.listen(3000, async () => {
+    await main().catch(console.trace);
     console.log("Listening on *.3000");
 });
 
-main().catch(console.trace)
+process.on("SIGINT", cleanup);
+process.on("SIGTERM", cleanup)
