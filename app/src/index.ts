@@ -6,43 +6,50 @@ import { MongoClient, Db } from "mongodb";
 import { secret } from "./secrets";
 import { MongoUser, UserNamespace } from "./backend/users";
 
-const app: express.Application = express();
-const server: Server = createServer(app);
-const io: SocketIO.Server = socket(server);
-const mongoURL: string = `mongodb://${secret.mongoUser}:${secret.mongoPassword}@${secret.mongoURL}:${secret.mongoPort}/notif`;
+class MainServer {
+    app: express.Application = express();
+    server: Server = createServer(this.app);
+    io: SocketIO.Server = socket(this.server);
+    mongoURL: string = `mongodb://${secret.mongoUser}:${secret.mongoPassword}@${secret.mongoURL}:${secret.mongoPort}/notif`;
 
-let namespace: UserNamespace;
-let db: Db;
-let userFunc: MongoUser;
-let tokens: string[];
+    namespace: UserNamespace;
+    db: Db;
+    userFunc: MongoUser;
+    tokens: string[];
 
-/**
- * initializes the server
- */
-const main = async (): Promise<void> => {
-    db = await MongoClient.connect(mongoURL);
-    userFunc = await MongoUser.initialize(db);
-    tokens = await userFunc.getAllTokens();
-    namespace = new UserNamespace(io, tokens);
+    constructor(){
+        this.app.get("/", (req, res) => {
+            res.send("Hello World");
+        });
+
+        this.server.listen(3000, async () => {
+            await this.main().catch(console.trace);
+            console.log("Listening on *.3000");
+        });
+    }
+
+    /**
+     * initializes the socket server
+     */
+    main = async (): Promise<void> => {
+        this.db = await MongoClient.connect(this.mongoURL);
+        this.userFunc = await MongoUser.initialize(this.db);
+        this.tokens = await this.userFunc.getAllTokens();
+        this.namespace = new UserNamespace(this.io, this.tokens);
+    }
+
+    /**
+     * cleans the server after it is closed
+     */
+    cleanup = async (): Promise<void> => {
+        this.server.close();
+        this.io.close();
+        await this.db.close();
+    }
+
 }
 
-/**
- * cleans the server after it is closed
- */
-const cleanup = async (): Promise<void> => {
-    server.close();
-    io.close();
-    await db.close();
-}
+const server: MainServer = new MainServer();
 
-app.get("/", (req, res) => {
-    res.send("Hello World");
-});
-
-server.listen(3000, async () => {
-    await main().catch(console.trace);
-    console.log("Listening on *.3000");
-});
-
-process.on("SIGINT", cleanup);
-process.on("SIGTERM", cleanup)
+process.on("SIGINT", server.cleanup);
+process.on("SIGTERM", server.cleanup);
