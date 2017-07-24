@@ -1,7 +1,6 @@
 import * as express from "express";
 import * as socket from "socket.io";
 import { Server, createServer } from "http";
-
 import { MongoClient, Db } from "mongodb";
 
 import { secret } from "./secrets";
@@ -31,6 +30,7 @@ const main = async (): Promise<void> => {
  * cleans the server after it is closed
  */
 const cleanup = async (): Promise<void> => {
+    server.close();
     io.close();
     await db.close();
 }

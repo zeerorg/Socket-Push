@@ -1,6 +1,7 @@
 node_modules
 .alm
-src/secrets.ts
-build/secrets.js
+app/src/secrets.ts
+build/src/secrets.js
 yarn.lock
 build
+ubuntu*

@@ -21,3 +21,5 @@ You will need to register and create your own token. (Steps to be added later)
 ### This project is typescript port of the previous project which grew out of hand: [Socket Notif](https://github.com/zeerorg/Socket-Notif)
 
 **Under development. The older project is working (if steps given their are followed correctly).**
+
+**NOTE: typescript type declarations are broken so you need to manually fix them. Example, type declaration of "mongodb/collection => count" function**

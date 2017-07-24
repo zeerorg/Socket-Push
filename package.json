@@ -18,7 +18,10 @@
     "uuid": "^3.1.0"
   },
   "scripts": {
-    "start": "tsc && node build/index.js",
+    "start": "tsc && node build/src/index.js",
     "build": "tsc"
+  },
+  "devDependencies": {
+    "socket.io-client": "^2.0.3"
   }
 }
