@@ -5,6 +5,7 @@ import { MongoClient, Db } from "mongodb";
 
 import { secret } from "./secrets";
 import { MongoUser, UserNamespace } from "./backend/users";
+import { Functions } from "./middleware/nsp";
 
 class MainServer {
     app: express.Application = express();
@@ -16,6 +17,7 @@ class MainServer {
     db: Db;
     userFunc: MongoUser;
     tokens: string[];
+    functions: Functions;
 
     constructor(){
         this.app.get("/", (req, res) => {
@@ -35,7 +37,8 @@ class MainServer {
         this.db = await MongoClient.connect(this.mongoURL);
         this.userFunc = await MongoUser.initialize(this.db);
         this.tokens = await this.userFunc.getAllTokens();
-        this.namespace = new UserNamespace(this.io, this.tokens);
+        this.functions = new Functions();
+        this.namespace = new UserNamespace(this.io, this.functions, this.tokens);
     }
 
     /**
@@ -53,3 +56,5 @@ const server: MainServer = new MainServer();
 
 process.on("SIGINT", server.cleanup);
 process.on("SIGTERM", server.cleanup);
+
+export { MainServer };

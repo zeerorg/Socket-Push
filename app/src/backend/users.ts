@@ -2,6 +2,8 @@ import { v4 as uuidv4 } from "uuid";
 import { Db, Collection } from "mongodb";
 import * as socket from "socket.io";
 
+import { Functions } from "../middleware/nsp";
+
 class User {
     username: string;
     password: string;
@@ -57,10 +59,12 @@ class MongoUser {
 class UserNamespace {
     nameSpace: {[key: string]: SocketIO.Namespace};
     io: SocketIO.Server;
+    functions: Functions;
 
-    constructor(io: SocketIO.Server, tokens: string[] = []){
+    constructor(io: SocketIO.Server, functions: Functions, tokens: string[] = []){
         this.nameSpace = {};
         this.io = io;
+        this.functions = functions;
         this.addNamespaceMany(tokens);
     }
 
@@ -72,6 +76,7 @@ class UserNamespace {
 
     addNamespace = (token: string): void => {
         const namespace: SocketIO.Namespace = this.io.of(`/${token}`);
+        namespace.use(this.configSocket);
         this.nameSpace[token] = namespace;
     }
 
@@ -85,6 +90,12 @@ class UserNamespace {
 
     getNamespace = (token: string): SocketIO.Namespace => {
         return this.nameSpace[token];
+    }
+
+    configSocket = (socket: SocketIO.Socket) => {
+        socket.on("DeviceAuth", () => {
+            this.functions.init();
+        })
     }
 
 }
