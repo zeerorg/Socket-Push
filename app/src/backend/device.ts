@@ -4,7 +4,7 @@ import { Db, Collection } from "mongodb";
 class Device {
     deviceId: string;
     token: string;
-    socketId: string;
+    socketId?: string;
     connected: boolean;
     messageBuf: string[];
     username: string;
@@ -15,16 +15,18 @@ class Device {
         this.username = username;
         this.connected = false;
         this.messageBuf = []
-        this.socketId = null;
+        this.socketId = undefined;
     }
 }
 
-class MongoDevice {
+class DeviceDb {
     deviceCollection: Collection;
 
-    static initialize = async function(db: Db): Promise<MongoDevice> {
-        let mongoDevice: MongoDevice = new MongoDevice();
-        mongoDevice.deviceCollection = await db.collection("user");
+    static initialize = async function(db: Db): Promise<DeviceDb> {
+        let mongoDevice: DeviceDb = new DeviceDb();
+        mongoDevice.deviceCollection = await db.collection("device");
         return mongoDevice;
     }
 }
+
+export { DeviceDb };

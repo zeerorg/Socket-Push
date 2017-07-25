@@ -4,8 +4,9 @@ import { Server, createServer } from "http";
 import { MongoClient, Db } from "mongodb";
 
 import { secret } from "./secrets";
-import { MongoUser, UserNamespace } from "./backend/users";
+import { ClientDb } from "./backend/client";
 import { Functions } from "./middleware/nsp";
+import { Main } from "./middleware/main";
 
 class MainServer {
     app: express.Application = express();
@@ -13,9 +14,8 @@ class MainServer {
     io: SocketIO.Server = socket(this.server);
     mongoURL: string = `mongodb://${secret.mongoUser}:${secret.mongoPassword}@${secret.mongoURL}:${secret.mongoPort}/notif`;
 
-    namespace: UserNamespace;
     db: Db;
-    userFunc: MongoUser;
+    userFunc: MongoClient;
     tokens: string[];
     functions: Functions;
 
@@ -25,7 +25,7 @@ class MainServer {
         });
 
         this.server.listen(3000, async () => {
-            await this.main().catch(console.trace);
+            await main().catch(console.trace);
             console.log("Listening on *.3000");
         });
     }
@@ -33,13 +33,6 @@ class MainServer {
     /**
      * initializes the socket server
      */
-    main = async (): Promise<void> => {
-        this.db = await MongoClient.connect(this.mongoURL);
-        this.userFunc = await MongoUser.initialize(this.db);
-        this.tokens = await this.userFunc.getAllTokens();
-        this.functions = new Functions();
-        this.namespace = new UserNamespace(this.io, this.functions, this.tokens);
-    }
 
     /**
      * cleans the server after it is closed

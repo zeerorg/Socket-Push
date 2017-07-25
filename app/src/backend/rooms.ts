@@ -16,31 +16,14 @@ class Room {
     }
 }
 
-class MongoRoom {
+class RoomDb {
     roomCollection: Collection;
 
-    static initialize = async function(db: Db): Promise<MongoRoom> {
-        let mongoRoom: MongoRoom = new MongoRoom();
+    static initialize = async function(db: Db): Promise<RoomDb> {
+        let mongoRoom: RoomDb = new RoomDb();
         mongoRoom.roomCollection = await db.collection("rooms");
         return mongoRoom;
     }
-
-    getAllRooms = async (token: string): Promise<Array<Room>> => {
-        let rooms: Room[] = await this.roomCollection.find({token: token}).toArray();
-        return rooms;
-    }
-
-    checkRoom = async (token: string, name: string): Promise<boolean> => {
-        return (await this.roomCollection.find({token: token, name: name}).count()) != 0;
-    }
-
-    getRoom = async (token: string, name: string): Promise<Room> => {
-        return await this.roomCollection.findOne({token: token, name: name});
-    }
 }
 
-class SocketRooms {
-
-    
-
-}
+export { RoomDb };
